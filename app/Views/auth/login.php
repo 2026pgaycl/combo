@@ -7,13 +7,12 @@ unset($_SESSION['_flash']);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log in — Combo</title>
+<title>Log in — Office Building Rental Management System</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body class="auth-body">
 <div class="auth-card">
-    <div class="auth-brand">Combo</div>
-    <p class="auth-subtitle">Office Building Rental Management</p>
+    <div class="auth-brand">Office Building Rental Management System</div>
 
     <?php if ($error): ?>
         <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>

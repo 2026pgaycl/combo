@@ -10,13 +10,13 @@ unset($_SESSION['_flash']);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Combo — Office Rental Management</title>
+<title>Office Building Rental Management System</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
 <div class="app-shell">
     <aside class="sidebar">
-        <div class="sidebar-brand">Combo</div>
+        <div class="sidebar-brand">Office Building Rental Management System</div>
         <nav class="sidebar-nav">
             <a href="/dashboard">Dashboard</a>
             <a href="/buildings">Buildings</a>
