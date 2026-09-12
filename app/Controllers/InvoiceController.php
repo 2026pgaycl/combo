@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Lease;
+use App\Models\NotificationLog;
 use App\Models\Payment;
 
 class InvoiceController extends Controller
@@ -55,15 +56,18 @@ class InvoiceController extends Controller
 
         $subtotal = array_sum(array_column($items, 'amount'));
         $total = $subtotal + $tax;
+        $periodStart = Request::input('period_start');
+        $periodEnd = Request::input('period_end');
+        $dueDate = Request::input('due_date');
 
         Database::beginTransaction();
         try {
             $invoiceId = Invoice::create([
                 'lease_id' => $leaseId,
                 'invoice_no' => 'INV-PENDING-' . bin2hex(random_bytes(6)),
-                'period_start' => Request::input('period_start'),
-                'period_end' => Request::input('period_end'),
-                'due_date' => Request::input('due_date'),
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'due_date' => $dueDate,
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'total' => $total,
@@ -71,9 +75,8 @@ class InvoiceController extends Controller
             ]);
 
             // Invoice number embeds the row id, so it's finalized once the id exists.
-            Invoice::update($invoiceId, [
-                'invoice_no' => 'INV-' . date('Y') . '-' . str_pad((string) $invoiceId, 5, '0', STR_PAD_LEFT),
-            ]);
+            $invoiceNo = 'INV-' . date('Y') . '-' . str_pad((string) $invoiceId, 5, '0', STR_PAD_LEFT);
+            Invoice::update($invoiceId, ['invoice_no' => $invoiceNo]);
 
             foreach ($items as $item) {
                 InvoiceItem::create([
@@ -89,6 +92,28 @@ class InvoiceController extends Controller
             error_log('[Combo] Invoice creation failed: ' . $e->getMessage());
             $this->flash('error', 'Could not create the invoice. Please try again.');
             $this->redirect('/invoices/create');
+        }
+
+        $lease = Lease::findWithDetails($leaseId);
+        if ($lease) {
+            NotificationLog::queue(
+                null,
+                'email',
+                "Invoice {$invoiceNo} — payment due",
+                sprintf(
+                    "Dear %s,\n\nInvoice %s for %s — %s (period %s to %s) totaling RM %s is due on %s.\n\nRecipient: %s <%s>",
+                    $lease['contact_name'],
+                    $invoiceNo,
+                    $lease['building_name'],
+                    $lease['unit_number'],
+                    $periodStart,
+                    $periodEnd,
+                    number_format($total, 2),
+                    $dueDate,
+                    $lease['company_name'],
+                    $lease['contact_email'] ?? 'no email on file'
+                )
+            );
         }
 
         $this->flash('success', 'Invoice created.');
@@ -143,6 +168,27 @@ class InvoiceController extends Controller
             Invoice::update((int) $id, ['status' => $status]);
 
             Database::commit();
+
+            if ($status === 'paid') {
+                $details = Invoice::findWithDetails((int) $id);
+                if ($details) {
+                    NotificationLog::queue(
+                        null,
+                        'email',
+                        "Payment received — {$details['invoice_no']}",
+                        sprintf(
+                            "Dear %s,\n\nWe've received full payment of RM %s for invoice %s (%s — %s). Thank you.\n\nRecipient: %s <%s>",
+                            $details['contact_name'],
+                            number_format((float) $details['total'], 2),
+                            $details['invoice_no'],
+                            $details['building_name'],
+                            $details['unit_number'],
+                            $details['company_name'],
+                            $details['contact_email'] ?? 'no email on file'
+                        )
+                    );
+                }
+            }
         } catch (\Throwable $e) {
             Database::rollBack();
             error_log('[Combo] Payment recording failed: ' . $e->getMessage());

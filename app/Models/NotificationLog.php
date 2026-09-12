@@ -29,4 +29,20 @@ class NotificationLog extends Model
             [$id]
         );
     }
+
+    /**
+     * Queues a notification for an app event. $userId is a users.id (e.g. staff
+     * assigned to a ticket) — tenants have no user account in this schema, so
+     * tenant-facing notices pass null and identify the recipient in the body.
+     */
+    public static function queue(?int $userId, string $channel, string $subject, string $body): void
+    {
+        self::create([
+            'user_id' => $userId,
+            'channel' => $channel,
+            'subject' => $subject,
+            'body' => $body,
+            'status' => 'queued',
+        ]);
+    }
 }

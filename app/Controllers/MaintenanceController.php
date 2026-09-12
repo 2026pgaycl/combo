@@ -8,6 +8,8 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Core\Upload;
 use App\Models\MaintenanceTicket;
+use App\Models\NotificationLog;
+use App\Models\Tenant;
 use App\Models\TicketUpdate;
 use App\Models\Unit;
 use App\Models\User;
@@ -69,14 +71,35 @@ class MaintenanceController extends Controller
             [$unitId]
         );
 
+        $category = Request::input('category', 'general');
+
         $ticketId = MaintenanceTicket::create([
             'unit_id' => $unitId,
             'tenant_id' => $lease['tenant_id'] ?? null,
-            'category' => Request::input('category', 'general'),
+            'category' => $category,
             'description' => $description,
             'photo_path' => $photoPath,
             'status' => 'open',
         ]);
+
+        if (!empty($lease['tenant_id'])) {
+            $tenant = Tenant::find((int) $lease['tenant_id']);
+            if ($tenant) {
+                NotificationLog::queue(
+                    null,
+                    'email',
+                    'We received your maintenance request',
+                    sprintf(
+                        "Dear %s,\n\nWe've logged your %s request: \"%s\". We'll follow up soon.\n\nRecipient: %s <%s>",
+                        $tenant['contact_name'],
+                        $category,
+                        $description,
+                        $tenant['company_name'],
+                        $tenant['contact_email'] ?? 'no email on file'
+                    )
+                );
+            }
+        }
 
         $this->flash('success', 'Ticket reported.');
         $this->redirect("/maintenance/{$ticketId}");
@@ -102,12 +125,16 @@ class MaintenanceController extends Controller
     {
         $this->verifyCsrf();
 
+        $existing = MaintenanceTicket::find((int) $id);
+
         $assignedTo = Request::input('assigned_to');
         $cost = Request::input('cost');
+        $newStatus = Request::input('status', 'open');
+        $newAssignedTo = ($assignedTo !== '' && $assignedTo !== null) ? (int) $assignedTo : null;
 
         $data = [
-            'status' => Request::input('status', 'open'),
-            'assigned_to' => ($assignedTo !== '' && $assignedTo !== null) ? (int) $assignedTo : null,
+            'status' => $newStatus,
+            'assigned_to' => $newAssignedTo,
             'cost' => ($cost !== '' && $cost !== null) ? (float) $cost : null,
         ];
 
@@ -119,7 +146,6 @@ class MaintenanceController extends Controller
                 $this->redirect("/maintenance/{$id}");
             }
 
-            $existing = MaintenanceTicket::find((int) $id);
             if (!empty($existing['photo_path'])) {
                 Upload::delete($existing['photo_path']);
             }
@@ -128,6 +154,34 @@ class MaintenanceController extends Controller
         }
 
         MaintenanceTicket::update((int) $id, $data);
+
+        if ($newAssignedTo !== null && $newAssignedTo !== (int) ($existing['assigned_to'] ?? 0)) {
+            NotificationLog::queue(
+                $newAssignedTo,
+                'email',
+                "Maintenance ticket #{$id} assigned to you",
+                "You have been assigned maintenance ticket #{$id}."
+            );
+        }
+
+        if ($newStatus !== $existing['status'] && in_array($newStatus, ['resolved', 'closed'], true) && !empty($existing['tenant_id'])) {
+            $tenant = Tenant::find((int) $existing['tenant_id']);
+            if ($tenant) {
+                NotificationLog::queue(
+                    null,
+                    'email',
+                    "Your maintenance ticket #{$id} is {$newStatus}",
+                    sprintf(
+                        "Dear %s,\n\nYour maintenance ticket #%s has been marked %s.\n\nRecipient: %s <%s>",
+                        $tenant['contact_name'],
+                        $id,
+                        $newStatus,
+                        $tenant['company_name'],
+                        $tenant['contact_email'] ?? 'no email on file'
+                    )
+                );
+            }
+        }
 
         $this->flash('success', 'Ticket updated.');
         $this->redirect("/maintenance/{$id}");

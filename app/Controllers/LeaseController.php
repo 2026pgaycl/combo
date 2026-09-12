@@ -9,6 +9,7 @@ use App\Core\Upload;
 use App\Models\Document;
 use App\Models\Lease;
 use App\Models\LeaseDocument;
+use App\Models\NotificationLog;
 use App\Models\Tenant;
 use App\Models\Unit;
 
@@ -47,15 +48,18 @@ class LeaseController extends Controller
 
         $unitId = (int) Request::input('unit_id');
         $tenantId = (int) Request::input('tenant_id');
+        $startDate = Request::input('start_date');
+        $endDate = Request::input('end_date');
+        $monthlyRent = (float) Request::input('monthly_rent', 0);
 
         Database::beginTransaction();
         try {
             $leaseId = Lease::create([
                 'unit_id' => $unitId,
                 'tenant_id' => $tenantId,
-                'start_date' => Request::input('start_date'),
-                'end_date' => Request::input('end_date'),
-                'monthly_rent' => (float) Request::input('monthly_rent', 0),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'monthly_rent' => $monthlyRent,
                 'deposit' => (float) Request::input('deposit', 0),
                 'escalation_clause' => Request::input('escalation_clause') ?: null,
                 'status' => 'active',
@@ -69,6 +73,27 @@ class LeaseController extends Controller
             error_log('[Combo] Lease creation failed: ' . $e->getMessage());
             $this->flash('error', 'Could not create the lease. Please try again.');
             $this->redirect('/leases/create');
+        }
+
+        $tenant = Tenant::find($tenantId);
+        $unit = Unit::findWithDetails($unitId);
+        if ($tenant && $unit) {
+            NotificationLog::queue(
+                null,
+                'email',
+                "Lease confirmed — {$unit['unit_number']}",
+                sprintf(
+                    "Dear %s,\n\nYour lease for %s — %s is now active (%s to %s) at RM %s/month.\n\nRecipient: %s <%s>",
+                    $tenant['contact_name'],
+                    $unit['building_name'],
+                    $unit['unit_number'],
+                    $startDate,
+                    $endDate,
+                    number_format($monthlyRent, 2),
+                    $tenant['company_name'],
+                    $tenant['contact_email'] ?? 'no email on file'
+                )
+            );
         }
 
         $this->flash('success', 'Lease created and unit marked occupied.');
@@ -153,6 +178,24 @@ class LeaseController extends Controller
                 Unit::update((int) $lease['unit_id'], ['status' => 'vacant']);
                 Database::commit();
                 $this->flash('success', 'Lease terminated and unit marked vacant.');
+
+                $tenant = Tenant::find((int) $lease['tenant_id']);
+                $unit = Unit::findWithDetails((int) $lease['unit_id']);
+                if ($tenant && $unit) {
+                    NotificationLog::queue(
+                        null,
+                        'email',
+                        "Lease terminated — {$unit['unit_number']}",
+                        sprintf(
+                            "Dear %s,\n\nYour lease for %s — %s has been terminated effective today.\n\nRecipient: %s <%s>",
+                            $tenant['contact_name'],
+                            $unit['building_name'],
+                            $unit['unit_number'],
+                            $tenant['company_name'],
+                            $tenant['contact_email'] ?? 'no email on file'
+                        )
+                    );
+                }
             } catch (\Throwable $e) {
                 Database::rollBack();
                 error_log('[Combo] Lease termination failed: ' . $e->getMessage());
