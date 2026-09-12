@@ -4,10 +4,12 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Csv;
+use App\Core\Database;
 use App\Core\Request;
 use App\Models\Document;
 use App\Models\Lease;
 use App\Models\Tenant;
+use App\Models\User;
 
 class TenantController extends Controller
 {
@@ -95,7 +97,67 @@ class TenantController extends Controller
             'tenant' => $tenant,
             'leases' => $leases,
             'documents' => Document::forRelated('tenant', (int) $id),
+            'portalUser' => User::findByTenant((int) $id),
         ]);
+    }
+
+    /** Creates a portal login for this tenant, using their contact email. The temporary password is shown once. */
+    public function createPortalUser(string $id): void
+    {
+        $this->verifyCsrf();
+
+        $tenant = Tenant::find((int) $id);
+        if (!$tenant) {
+            $this->redirect('/tenants');
+        }
+
+        if (empty($tenant['contact_email'])) {
+            $this->flash('error', 'Add a contact email before creating a portal login.');
+            $this->redirect("/tenants/{$id}");
+        }
+
+        if (User::findByTenant((int) $id)) {
+            $this->flash('error', 'A portal login already exists for this tenant.');
+            $this->redirect("/tenants/{$id}");
+        }
+
+        if (Database::selectOne('SELECT id FROM users WHERE email = ?', [$tenant['contact_email']])) {
+            $this->flash('error', 'That email is already used by another account.');
+            $this->redirect("/tenants/{$id}");
+        }
+
+        $role = Database::selectOne('SELECT id FROM roles WHERE slug = "tenant"');
+        $password = bin2hex(random_bytes(4));
+
+        User::create([
+            'role_id' => $role['id'],
+            'name' => $tenant['contact_name'],
+            'email' => $tenant['contact_email'],
+            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+            'tenant_id' => (int) $id,
+            'status' => 'active',
+        ]);
+
+        $this->flash('success', "Portal login created for {$tenant['contact_email']} — temporary password: {$password}. Share this with the tenant now; it won't be shown again.");
+        $this->redirect("/tenants/{$id}");
+    }
+
+    /** Resets an existing portal login's password. The new temporary password is shown once. */
+    public function resetPortalPassword(string $id): void
+    {
+        $this->verifyCsrf();
+
+        $user = User::findByTenant((int) $id);
+        if (!$user) {
+            $this->flash('error', 'No portal login exists for this tenant yet.');
+            $this->redirect("/tenants/{$id}");
+        }
+
+        $password = bin2hex(random_bytes(4));
+        User::update((int) $user['id'], ['password_hash' => password_hash($password, PASSWORD_DEFAULT)]);
+
+        $this->flash('success', "Password reset — new temporary password: {$password}. Share this with the tenant now; it won't be shown again.");
+        $this->redirect("/tenants/{$id}");
     }
 
     public function edit(string $id): void

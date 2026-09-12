@@ -19,4 +19,10 @@ class User extends Model
              ORDER BY u.name"
         );
     }
+
+    /** The portal login for a tenant, if one has been created. */
+    public static function findByTenant(int $tenantId): ?array
+    {
+        return Database::selectOne('SELECT * FROM users WHERE tenant_id = ?', [$tenantId]);
+    }
 }

@@ -38,6 +38,37 @@ class Lease extends Model
         );
     }
 
+    /** A tenant's own leases, for the tenant portal. */
+    public static function forTenant(int $tenantId): array
+    {
+        return Database::select(
+            'SELECT l.*, u.unit_number, b.name AS building_name,
+                    DATEDIFF(l.end_date, CURDATE()) AS days_to_expiry
+             FROM leases l
+             JOIN units u ON u.id = l.unit_id
+             JOIN floors f ON f.id = u.floor_id
+             JOIN buildings b ON b.id = f.building_id
+             WHERE l.tenant_id = ?
+             ORDER BY l.end_date DESC',
+            [$tenantId]
+        );
+    }
+
+    /** Units a tenant currently actively leases — used to scope the portal's maintenance form. */
+    public static function activeUnitsForTenant(int $tenantId): array
+    {
+        return Database::select(
+            'SELECT u.id, u.unit_number, b.name AS building_name
+             FROM leases l
+             JOIN units u ON u.id = l.unit_id
+             JOIN floors f ON f.id = u.floor_id
+             JOIN buildings b ON b.id = f.building_id
+             WHERE l.tenant_id = ? AND l.status = "active"
+             ORDER BY u.unit_number',
+            [$tenantId]
+        );
+    }
+
     /** Leases expiring within N days — used for the 90/60/30-day renewal alerts. */
     public static function expiringWithin(int $days): array
     {

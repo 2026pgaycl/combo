@@ -10,6 +10,21 @@
     <dt>Reg. No.</dt><dd><?= htmlspecialchars($tenant['reg_no'] ?? '—') ?></dd>
 </dl>
 
+<h2>Portal Access</h2>
+<?php if ($portalUser): ?>
+<p>Login email: <strong><?= htmlspecialchars($portalUser['email']) ?></strong> (<?= htmlspecialchars($portalUser['status']) ?>)</p>
+<form method="POST" action="/tenants/<?= $tenant['id'] ?>/portal-user/reset" onsubmit="return confirm('Reset this tenant\'s portal password? The old one will stop working immediately.');">
+    <?= \App\Core\Csrf::field() ?>
+    <button type="submit" class="btn btn-secondary">Reset Password</button>
+</form>
+<?php else: ?>
+<p class="text-muted">This tenant has no portal login yet.</p>
+<form method="POST" action="/tenants/<?= $tenant['id'] ?>/portal-user">
+    <?= \App\Core\Csrf::field() ?>
+    <button type="submit" class="btn btn-secondary">Create Portal Login</button>
+</form>
+<?php endif; ?>
+
 <h2>Leases</h2>
 <table class="data-table">
     <thead><tr><th>Unit</th><th>Start</th><th>End</th><th>Rent</th><th>Status</th></tr></thead>
