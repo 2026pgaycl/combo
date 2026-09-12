@@ -30,7 +30,9 @@ a { color: var(--navy); }
 
 .sidebar {
     width: 240px;
-    background: var(--navy);
+    background:
+        linear-gradient(rgba(30, 39, 97, 0.85), rgba(30, 39, 97, 0.85)),
+        url('/assets/images/login-bg.png') center / cover no-repeat;
     color: white;
     display: flex;
     flex-direction: column;
