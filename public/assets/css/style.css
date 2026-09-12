@@ -305,7 +305,7 @@ input, select, textarea {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: var(--navy);
+    background: url('/assets/images/login-bg.png') center / cover no-repeat;
 }
 .auth-card {
     background: white;
