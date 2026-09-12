@@ -18,6 +18,13 @@ unset($_SESSION['_flash']);
     <aside class="sidebar">
         <div class="sidebar-brand">Office Building Rental Management System</div>
         <nav class="sidebar-nav">
+            <?php if (($user['role_slug'] ?? null) === 'tenant'): ?>
+            <a href="/portal">Dashboard</a>
+            <a href="/portal/invoices">Invoices</a>
+            <a href="/portal/maintenance">Maintenance</a>
+            <a href="/portal/documents">Documents</a>
+            <a href="/portal/profile">My Profile</a>
+            <?php else: ?>
             <a href="/dashboard">Dashboard</a>
             <a href="/buildings">Buildings</a>
             <a href="/units">Units</a>
@@ -28,6 +35,7 @@ unset($_SESSION['_flash']);
             <a href="/documents">Documents</a>
             <a href="/notifications">Notifications</a>
             <a href="/help">Help</a>
+            <?php endif; ?>
         </nav>
         <?php if ($user): ?>
         <div class="sidebar-user">

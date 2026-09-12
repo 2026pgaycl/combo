@@ -30,7 +30,7 @@ class AuthController extends Controller
             $this->redirect('/login');
         }
 
-        $this->redirect('/dashboard');
+        $this->redirect(Auth::role() === 'tenant' ? '/portal' : '/dashboard');
     }
 
     public function logout(): void

@@ -41,4 +41,38 @@ class Invoice extends Model
             [$id]
         );
     }
+
+    /** A tenant's own invoices, for the tenant portal. */
+    public static function forTenant(int $tenantId): array
+    {
+        return Database::select(
+            'SELECT i.*, u.unit_number, b.name AS building_name,
+                    COALESCE(SUM(p.amount), 0) AS amount_paid
+             FROM invoices i
+             JOIN leases l ON l.id = i.lease_id
+             JOIN units u ON u.id = l.unit_id
+             JOIN floors f ON f.id = u.floor_id
+             JOIN buildings b ON b.id = f.building_id
+             LEFT JOIN payments p ON p.invoice_id = i.id
+             WHERE l.tenant_id = ?
+             GROUP BY i.id
+             ORDER BY i.due_date DESC',
+            [$tenantId]
+        );
+    }
+
+    /** Scoped lookup so a tenant can only ever open their own invoice by id. */
+    public static function findForTenant(int $id, int $tenantId): ?array
+    {
+        return Database::selectOne(
+            'SELECT i.*, u.unit_number, b.name AS building_name
+             FROM invoices i
+             JOIN leases l ON l.id = i.lease_id
+             JOIN units u ON u.id = l.unit_id
+             JOIN floors f ON f.id = u.floor_id
+             JOIN buildings b ON b.id = f.building_id
+             WHERE i.id = ? AND l.tenant_id = ?',
+            [$id, $tenantId]
+        );
+    }
 }

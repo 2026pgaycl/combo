@@ -21,7 +21,7 @@ class Middleware
 
             case 'guest':
                 if (Auth::check()) {
-                    header('Location: /dashboard');
+                    header('Location: ' . (Auth::role() === 'tenant' ? '/portal' : '/dashboard'));
                     exit;
                 }
                 break;

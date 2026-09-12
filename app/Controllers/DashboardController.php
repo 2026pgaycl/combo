@@ -10,6 +10,10 @@ class DashboardController extends Controller
 {
     public function index(): void
     {
+        if (Auth::role() === 'tenant') {
+            $this->redirect('/portal');
+        }
+
         $stats = [
             'buildings' => Database::selectOne('SELECT COUNT(*) AS c FROM buildings')['c'],
             'units_total' => Database::selectOne('SELECT COUNT(*) AS c FROM units')['c'],
