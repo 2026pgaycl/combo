@@ -16,8 +16,18 @@
 <h2>Description</h2>
 <p><?= nl2br(htmlspecialchars($ticket['description'])) ?></p>
 
+<?php if (!empty($ticket['photo_path'])): ?>
+<div class="photo-grid">
+    <div class="photo-tile">
+        <a href="/<?= htmlspecialchars($ticket['photo_path']) ?>" target="_blank">
+            <img src="/<?= htmlspecialchars($ticket['photo_path']) ?>" alt="Photo for ticket #<?= $ticket['id'] ?>">
+        </a>
+    </div>
+</div>
+<?php endif; ?>
+
 <h2>Update Ticket</h2>
-<form method="POST" action="/maintenance/<?= $ticket['id'] ?>" class="form-card">
+<form method="POST" action="/maintenance/<?= $ticket['id'] ?>" enctype="multipart/form-data" class="form-card">
     <?= \App\Core\Csrf::field() ?>
     <input type="hidden" name="_method" value="PUT">
 
@@ -41,6 +51,10 @@
             <input type="number" step="0.01" name="cost" value="<?= htmlspecialchars($ticket['cost'] ?? '') ?>">
         </label>
     </div>
+
+    <label>Photo (<?= !empty($ticket['photo_path']) ? 'replace' : 'add' ?>, optional)
+        <input type="file" name="photo" accept="image/*">
+    </label>
 
     <div class="form-actions">
         <button type="submit" class="btn btn-primary">Save</button>

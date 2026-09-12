@@ -6,6 +6,7 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Database;
 use App\Core\Request;
+use App\Core\Upload;
 use App\Models\MaintenanceTicket;
 use App\Models\TicketUpdate;
 use App\Models\Unit;
@@ -13,6 +14,10 @@ use App\Models\User;
 
 class MaintenanceController extends Controller
 {
+    private const PHOTO_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+    private const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
     public function index(): void
     {
         $status = Request::input('status');
@@ -49,6 +54,16 @@ class MaintenanceController extends Controller
             $this->redirect('/maintenance/create');
         }
 
+        $photoPath = null;
+        $photoFile = Request::file('photo');
+        if ($photoFile && $photoFile['error'] !== UPLOAD_ERR_NO_FILE) {
+            $photoPath = Upload::store($photoFile, 'maintenance', self::PHOTO_EXTENSIONS, self::PHOTO_MIME_TYPES, $error);
+            if ($photoPath === null) {
+                $this->flash('error', $error);
+                $this->redirect('/maintenance/create');
+            }
+        }
+
         $lease = Database::selectOne(
             'SELECT tenant_id FROM leases WHERE unit_id = ? AND status = "active"',
             [$unitId]
@@ -59,6 +74,7 @@ class MaintenanceController extends Controller
             'tenant_id' => $lease['tenant_id'] ?? null,
             'category' => Request::input('category', 'general'),
             'description' => $description,
+            'photo_path' => $photoPath,
             'status' => 'open',
         ]);
 
@@ -89,11 +105,29 @@ class MaintenanceController extends Controller
         $assignedTo = Request::input('assigned_to');
         $cost = Request::input('cost');
 
-        MaintenanceTicket::update((int) $id, [
+        $data = [
             'status' => Request::input('status', 'open'),
             'assigned_to' => ($assignedTo !== '' && $assignedTo !== null) ? (int) $assignedTo : null,
             'cost' => ($cost !== '' && $cost !== null) ? (float) $cost : null,
-        ]);
+        ];
+
+        $photoFile = Request::file('photo');
+        if ($photoFile && $photoFile['error'] !== UPLOAD_ERR_NO_FILE) {
+            $photoPath = Upload::store($photoFile, 'maintenance', self::PHOTO_EXTENSIONS, self::PHOTO_MIME_TYPES, $error);
+            if ($photoPath === null) {
+                $this->flash('error', $error);
+                $this->redirect("/maintenance/{$id}");
+            }
+
+            $existing = MaintenanceTicket::find((int) $id);
+            if (!empty($existing['photo_path'])) {
+                Upload::delete($existing['photo_path']);
+            }
+
+            $data['photo_path'] = $photoPath;
+        }
+
+        MaintenanceTicket::update((int) $id, $data);
 
         $this->flash('success', 'Ticket updated.');
         $this->redirect("/maintenance/{$id}");
