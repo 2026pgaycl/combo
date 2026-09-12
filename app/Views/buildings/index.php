@@ -3,6 +3,11 @@
     <a href="/buildings/create" class="btn btn-primary">+ Add Building</a>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/buildings/export',
+    'importUrl' => '/buildings/import',
+]); ?>
+
 <table class="data-table">
     <thead>
         <tr>

@@ -2,6 +2,10 @@
     <h1>Documents</h1>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/documents/export',
+]); ?>
+
 <table class="data-table">
     <thead>
         <tr><th>Title</th><th>Attached to</th><th>Type</th><th>Expiry</th><th>Uploaded</th><th></th></tr>

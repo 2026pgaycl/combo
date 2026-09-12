@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Database;
 use App\Core\Request;
 use App\Models\Invoice;
@@ -28,6 +29,60 @@ class InvoiceController extends Controller
             'leases' => array_filter(Lease::withDetails(), fn($l) => $l['status'] === 'active'),
             'selectedLeaseId' => $leaseId ? (int) $leaseId : null,
         ]);
+    }
+
+    public function export(): void
+    {
+        Csv::export(
+            'invoices.csv',
+            ['id', 'lease_id', 'invoice_no', 'period_start', 'period_end', 'due_date', 'subtotal', 'tax', 'total', 'status'],
+            Invoice::all('id DESC')
+        );
+    }
+
+    /**
+     * Bulk-creates invoice headers from a CSV in the same shape export() produces.
+     * lease_id must reference an existing lease. Imported invoices have no line
+     * items (invoice_items is a separate table this format doesn't cover) and
+     * queue no notification, since imports are bulk/historical data, not a live
+     * event. A blank or duplicate invoice_no gets a generated placeholder.
+     */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $leaseId = (int) ($row['lease_id'] ?? 0);
+            if ($leaseId === 0 || !Lease::find($leaseId)) {
+                $skipped++;
+                continue;
+            }
+
+            $invoiceNo = trim((string) ($row['invoice_no'] ?? '')) ?: ('INV-IMPORT-' . bin2hex(random_bytes(4)));
+
+            try {
+                Invoice::create([
+                    'lease_id' => $leaseId,
+                    'invoice_no' => $invoiceNo,
+                    'period_start' => $row['period_start'] ?: null,
+                    'period_end' => $row['period_end'] ?: null,
+                    'due_date' => $row['due_date'] ?: null,
+                    'subtotal' => (float) ($row['subtotal'] ?? 0),
+                    'tax' => (float) ($row['tax'] ?? 0),
+                    'total' => (float) ($row['total'] ?? 0),
+                    'status' => $row['status'] ?: 'unpaid',
+                ]);
+                $imported++;
+            } catch (\Throwable $e) {
+                $skipped++;
+            }
+        }
+
+        $this->flash('success', "Imported {$imported} invoice(s)." . ($skipped ? " Skipped {$skipped} row(s) (unknown lease_id or duplicate invoice_no)." : ''));
+        $this->redirect('/invoices');
     }
 
     public function store(): void

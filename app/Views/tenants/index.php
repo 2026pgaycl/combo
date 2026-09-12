@@ -3,6 +3,11 @@
     <a href="/tenants/create" class="btn btn-primary">+ Add Tenant</a>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/tenants/export',
+    'importUrl' => '/tenants/import',
+]); ?>
+
 <table class="data-table">
     <thead>
         <tr><th>Company</th><th>Contact</th><th>Unit</th><th>Lease Ends</th><th></th></tr>

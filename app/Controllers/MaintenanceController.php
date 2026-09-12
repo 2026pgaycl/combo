@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Database;
 use App\Core\Request;
 use App\Core\Upload;
@@ -42,6 +43,56 @@ class MaintenanceController extends Controller
             'units' => Unit::withDetails(),
             'selectedUnitId' => $unitId ? (int) $unitId : null,
         ]);
+    }
+
+    public function export(): void
+    {
+        Csv::export(
+            'maintenance_tickets.csv',
+            ['id', 'unit_id', 'tenant_id', 'category', 'description', 'status', 'assigned_to', 'cost'],
+            MaintenanceTicket::all('id DESC')
+        );
+    }
+
+    /**
+     * Bulk-creates tickets from a CSV in the same shape export() produces.
+     * unit_id must reference an existing unit; tenant_id/assigned_to are
+     * optional. No confirmation/assignment notification is queued, since
+     * imports are bulk/historical data, not a live event.
+     */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $unitId = (int) ($row['unit_id'] ?? 0);
+            $description = trim((string) ($row['description'] ?? ''));
+            if ($unitId === 0 || $description === '' || !Unit::find($unitId)) {
+                $skipped++;
+                continue;
+            }
+
+            $tenantId = (int) ($row['tenant_id'] ?? 0);
+            $assignedTo = (int) ($row['assigned_to'] ?? 0);
+            $cost = $row['cost'] ?? '';
+
+            MaintenanceTicket::create([
+                'unit_id' => $unitId,
+                'tenant_id' => $tenantId > 0 ? $tenantId : null,
+                'category' => $row['category'] ?: 'general',
+                'description' => $description,
+                'status' => $row['status'] ?: 'open',
+                'assigned_to' => $assignedTo > 0 ? $assignedTo : null,
+                'cost' => $cost !== '' ? (float) $cost : null,
+            ]);
+            $imported++;
+        }
+
+        $this->flash('success', "Imported {$imported} ticket(s)." . ($skipped ? " Skipped {$skipped} row(s) with a missing description or unknown unit_id." : ''));
+        $this->redirect('/maintenance');
     }
 
     public function store(): void

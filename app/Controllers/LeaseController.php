@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Database;
 use App\Core\Request;
 use App\Core\Upload;
@@ -40,6 +41,61 @@ class LeaseController extends Controller
             'vacantUnits' => Unit::vacantUnits(),
             'tenants' => Tenant::all('company_name'),
         ]);
+    }
+
+    public function export(): void
+    {
+        Csv::export(
+            'leases.csv',
+            ['id', 'unit_id', 'tenant_id', 'start_date', 'end_date', 'monthly_rent', 'deposit', 'escalation_clause', 'status'],
+            Lease::all('id DESC')
+        );
+    }
+
+    /**
+     * Bulk-creates leases from a CSV in the same shape export() produces.
+     * unit_id/tenant_id must reference existing rows; a row importing as
+     * status=active marks that unit occupied, matching store() above. No
+     * notification is queued for imported leases (bulk/historical loads,
+     * not a live event).
+     */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $unitId = (int) ($row['unit_id'] ?? 0);
+            $tenantId = (int) ($row['tenant_id'] ?? 0);
+            if ($unitId === 0 || $tenantId === 0 || !Unit::find($unitId) || !Tenant::find($tenantId)) {
+                $skipped++;
+                continue;
+            }
+
+            $status = $row['status'] ?: 'pending';
+
+            Lease::create([
+                'unit_id' => $unitId,
+                'tenant_id' => $tenantId,
+                'start_date' => $row['start_date'] ?: null,
+                'end_date' => $row['end_date'] ?: null,
+                'monthly_rent' => (float) ($row['monthly_rent'] ?? 0),
+                'deposit' => (float) ($row['deposit'] ?? 0),
+                'escalation_clause' => $row['escalation_clause'] ?: null,
+                'status' => $status,
+            ]);
+
+            if ($status === 'active') {
+                Unit::update($unitId, ['status' => 'occupied']);
+            }
+
+            $imported++;
+        }
+
+        $this->flash('success', "Imported {$imported} lease(s)." . ($skipped ? " Skipped {$skipped} row(s) with an unknown unit_id or tenant_id." : ''));
+        $this->redirect('/leases');
     }
 
     public function store(): void

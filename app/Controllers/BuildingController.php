@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Request;
 use App\Models\Building;
 use App\Models\Document;
@@ -20,6 +21,47 @@ class BuildingController extends Controller
     public function create(): void
     {
         $this->view('buildings.create');
+    }
+
+    /** Raw column export, importable via import() below. */
+    public function export(): void
+    {
+        Csv::export(
+            'buildings.csv',
+            ['id', 'name', 'address_line1', 'address_line2', 'city', 'state', 'postcode', 'country'],
+            Building::all('name')
+        );
+    }
+
+    /** Bulk-creates buildings from a CSV in the same shape export() produces. Never updates existing rows. */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($name === '') {
+                $skipped++;
+                continue;
+            }
+
+            Building::create([
+                'name' => $name,
+                'address_line1' => $row['address_line1'] ?? '',
+                'address_line2' => $row['address_line2'] ?: null,
+                'city' => $row['city'] ?? '',
+                'state' => $row['state'] ?: null,
+                'postcode' => $row['postcode'] ?: null,
+                'country' => $row['country'] ?: 'Malaysia',
+            ]);
+            $imported++;
+        }
+
+        $this->flash('success', "Imported {$imported} building(s)." . ($skipped ? " Skipped {$skipped} row(s) missing a name." : ''));
+        $this->redirect('/buildings');
     }
 
     public function store(): void

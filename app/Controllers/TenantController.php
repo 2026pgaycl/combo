@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Request;
 use App\Models\Document;
 use App\Models\Lease;
@@ -20,6 +21,46 @@ class TenantController extends Controller
     public function create(): void
     {
         $this->view('tenants.create');
+    }
+
+    public function export(): void
+    {
+        Csv::export(
+            'tenants.csv',
+            ['id', 'company_name', 'reg_no', 'contact_name', 'contact_email', 'contact_phone', 'billing_address'],
+            Tenant::all('company_name')
+        );
+    }
+
+    /** Bulk-creates tenants from a CSV in the same shape export() produces. Never updates existing rows. */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $companyName = trim((string) ($row['company_name'] ?? ''));
+            $contactName = trim((string) ($row['contact_name'] ?? ''));
+            if ($companyName === '' || $contactName === '') {
+                $skipped++;
+                continue;
+            }
+
+            Tenant::create([
+                'company_name' => $companyName,
+                'reg_no' => $row['reg_no'] ?: null,
+                'contact_name' => $contactName,
+                'contact_email' => $row['contact_email'] ?: null,
+                'contact_phone' => $row['contact_phone'] ?: null,
+                'billing_address' => $row['billing_address'] ?: null,
+            ]);
+            $imported++;
+        }
+
+        $this->flash('success', "Imported {$imported} tenant(s)." . ($skipped ? " Skipped {$skipped} row(s) missing a company or contact name." : ''));
+        $this->redirect('/tenants');
     }
 
     public function store(): void

@@ -29,6 +29,8 @@ $router->group(['auth'], function (Router $r) {
 
     $r->get('/buildings', [BuildingController::class, 'index']);
     $r->get('/buildings/create', [BuildingController::class, 'create']);
+    $r->get('/buildings/export', [BuildingController::class, 'export']);
+    $r->post('/buildings/import', [BuildingController::class, 'import']);
     $r->post('/buildings', [BuildingController::class, 'store']);
     $r->get('/buildings/{id}', [BuildingController::class, 'show']);
     $r->get('/buildings/{id}/edit', [BuildingController::class, 'edit']);
@@ -39,6 +41,8 @@ $router->group(['auth'], function (Router $r) {
 
     $r->get('/units', [UnitController::class, 'index']);
     $r->get('/units/create', [UnitController::class, 'create']);
+    $r->get('/units/export', [UnitController::class, 'export']);
+    $r->post('/units/import', [UnitController::class, 'import']);
     $r->post('/units', [UnitController::class, 'store']);
     $r->get('/units/{id}', [UnitController::class, 'show']);
     $r->get('/units/{id}/edit', [UnitController::class, 'edit']);
@@ -49,6 +53,8 @@ $router->group(['auth'], function (Router $r) {
 
     $r->get('/tenants', [TenantController::class, 'index']);
     $r->get('/tenants/create', [TenantController::class, 'create']);
+    $r->get('/tenants/export', [TenantController::class, 'export']);
+    $r->post('/tenants/import', [TenantController::class, 'import']);
     $r->post('/tenants', [TenantController::class, 'store']);
     $r->get('/tenants/{id}', [TenantController::class, 'show']);
     $r->get('/tenants/{id}/edit', [TenantController::class, 'edit']);
@@ -57,6 +63,8 @@ $router->group(['auth'], function (Router $r) {
 
     $r->get('/leases', [LeaseController::class, 'index']);
     $r->get('/leases/create', [LeaseController::class, 'create']);
+    $r->get('/leases/export', [LeaseController::class, 'export']);
+    $r->post('/leases/import', [LeaseController::class, 'import']);
     $r->post('/leases', [LeaseController::class, 'store']);
     $r->get('/leases/{id}', [LeaseController::class, 'show']);
     $r->post('/leases/{id}/terminate', [LeaseController::class, 'terminate']);
@@ -65,6 +73,8 @@ $router->group(['auth'], function (Router $r) {
 
     $r->get('/invoices', [InvoiceController::class, 'index']);
     $r->get('/invoices/create', [InvoiceController::class, 'create']);
+    $r->get('/invoices/export', [InvoiceController::class, 'export']);
+    $r->post('/invoices/import', [InvoiceController::class, 'import']);
     $r->post('/invoices', [InvoiceController::class, 'store']);
     $r->get('/invoices/{id}', [InvoiceController::class, 'show']);
     $r->post('/invoices/{id}/payments', [InvoiceController::class, 'storePayment']);
@@ -72,17 +82,22 @@ $router->group(['auth'], function (Router $r) {
 
     $r->get('/maintenance', [MaintenanceController::class, 'index']);
     $r->get('/maintenance/create', [MaintenanceController::class, 'create']);
+    $r->get('/maintenance/export', [MaintenanceController::class, 'export']);
+    $r->post('/maintenance/import', [MaintenanceController::class, 'import']);
     $r->post('/maintenance', [MaintenanceController::class, 'store']);
     $r->get('/maintenance/{id}', [MaintenanceController::class, 'show']);
     $r->put('/maintenance/{id}', [MaintenanceController::class, 'updateStatus']);
     $r->post('/maintenance/{id}/updates', [MaintenanceController::class, 'storeNote']);
 
     $r->get('/documents', [DocumentController::class, 'index']);
+    $r->get('/documents/export', [DocumentController::class, 'export']);
     $r->post('/documents', [DocumentController::class, 'store']);
     $r->delete('/documents/{id}', [DocumentController::class, 'destroy']);
 
     $r->get('/notifications', [NotificationController::class, 'index']);
     $r->get('/notifications/create', [NotificationController::class, 'create']);
+    $r->get('/notifications/export', [NotificationController::class, 'export']);
+    $r->post('/notifications/import', [NotificationController::class, 'import']);
     $r->post('/notifications', [NotificationController::class, 'store']);
     $r->get('/notifications/{id}', [NotificationController::class, 'show']);
     $r->put('/notifications/{id}', [NotificationController::class, 'updateStatus']);
