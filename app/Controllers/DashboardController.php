@@ -19,6 +19,12 @@ class DashboardController extends Controller
             'leases_expiring_soon' => Database::selectOne(
                 'SELECT COUNT(*) AS c FROM leases WHERE status = "active" AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)'
             )['c'],
+            'units_without_photos' => Database::selectOne(
+                'SELECT COUNT(*) AS c FROM units u WHERE NOT EXISTS (SELECT 1 FROM unit_photos p WHERE p.unit_id = u.id)'
+            )['c'],
+            'lease_documents_expiring_soon' => Database::selectOne(
+                'SELECT COUNT(*) AS c FROM lease_documents WHERE expiry_date IS NOT NULL AND expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)'
+            )['c'],
         ];
 
         $occupancyRate = $stats['units_total'] > 0

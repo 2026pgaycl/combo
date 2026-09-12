@@ -22,6 +22,14 @@
         <div class="stat-value"><?= (int) $stats['leases_expiring_soon'] ?></div>
         <div class="stat-label">Leases expiring in 90 days</div>
     </div>
+    <div class="stat-card">
+        <div class="stat-value"><?= (int) $stats['units_without_photos'] ?></div>
+        <div class="stat-label">Units without photos</div>
+    </div>
+    <div class="stat-card stat-card-alert">
+        <div class="stat-value"><?= (int) $stats['lease_documents_expiring_soon'] ?></div>
+        <div class="stat-label">Lease documents expiring in 90 days</div>
+    </div>
 </div>
 
 <div class="quick-links">
