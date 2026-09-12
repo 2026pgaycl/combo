@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Request;
 use App\Core\Upload;
 use App\Models\Building;
@@ -38,6 +39,50 @@ class UnitController extends Controller
     public function floorsForBuilding(string $buildingId): void
     {
         $this->json(Floor::forBuilding((int) $buildingId));
+    }
+
+    public function export(): void
+    {
+        Csv::export(
+            'units.csv',
+            ['id', 'floor_id', 'unit_number', 'unit_type', 'size_sqft', 'base_rent', 'status'],
+            Unit::all('unit_number')
+        );
+    }
+
+    /**
+     * Bulk-creates units from a CSV in the same shape export() produces.
+     * floor_id must reference an existing floor (export a building's units first
+     * to see valid ids) — rows with an unknown floor_id are skipped.
+     */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $floorId = (int) ($row['floor_id'] ?? 0);
+            $unitNumber = trim((string) ($row['unit_number'] ?? ''));
+            if ($floorId === 0 || $unitNumber === '' || !Floor::find($floorId)) {
+                $skipped++;
+                continue;
+            }
+
+            Unit::create([
+                'floor_id' => $floorId,
+                'unit_number' => $unitNumber,
+                'unit_type' => $row['unit_type'] ?: 'office',
+                'size_sqft' => (float) ($row['size_sqft'] ?? 0),
+                'base_rent' => (float) ($row['base_rent'] ?? 0),
+                'status' => $row['status'] ?: 'vacant',
+            ]);
+            $imported++;
+        }
+
+        $this->flash('success', "Imported {$imported} unit(s)." . ($skipped ? " Skipped {$skipped} row(s) with a missing unit number or unknown floor_id." : ''));
+        $this->redirect('/units');
     }
 
     public function store(): void

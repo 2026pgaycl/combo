@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Request;
 use App\Models\NotificationLog;
 use App\Models\User;
@@ -28,6 +29,41 @@ class NotificationController extends Controller
         $this->view('notifications.create', [
             'users' => User::all('name'),
         ]);
+    }
+
+    public function export(): void
+    {
+        Csv::export(
+            'notifications.csv',
+            ['id', 'user_id', 'channel', 'subject', 'body', 'status', 'sent_at', 'created_at'],
+            NotificationLog::all('id DESC')
+        );
+    }
+
+    /** Bulk-queues notifications from a CSV in the same shape export() produces, all as status=queued. */
+    public function import(): void
+    {
+        $this->verifyCsrf();
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach (Csv::parseUpload(Request::file('csv')) as $row) {
+            $subject = trim((string) ($row['subject'] ?? ''));
+            if ($subject === '') {
+                $skipped++;
+                continue;
+            }
+
+            $userId = (int) ($row['user_id'] ?? 0);
+            $channel = in_array($row['channel'] ?? '', ['email', 'sms', 'push'], true) ? $row['channel'] : 'email';
+
+            NotificationLog::queue($userId > 0 ? $userId : null, $channel, $subject, $row['body'] ?? '');
+            $imported++;
+        }
+
+        $this->flash('success', "Imported {$imported} notification(s)." . ($skipped ? " Skipped {$skipped} row(s) missing a subject." : ''));
+        $this->redirect('/notifications');
     }
 
     public function store(): void

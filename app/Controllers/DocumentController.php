@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csv;
 use App\Core\Request;
 use App\Core\Upload;
 use App\Models\Document;
@@ -29,6 +30,20 @@ class DocumentController extends Controller
         $this->view('documents.index', [
             'documents' => Document::withLabels(),
         ]);
+    }
+
+    /**
+     * Export only — every row references an uploaded file, so there's no
+     * sensible bulk-import format at the CSV level (files still have to be
+     * uploaded individually from the relevant building/tenant/lease/unit page).
+     */
+    public function export(): void
+    {
+        Csv::export(
+            'documents.csv',
+            ['id', 'related_type', 'related_id', 'title', 'file_path', 'expiry_date', 'created_at'],
+            Document::all('id DESC')
+        );
     }
 
     public function store(): void

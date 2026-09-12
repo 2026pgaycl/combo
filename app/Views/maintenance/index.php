@@ -3,6 +3,11 @@
     <a href="/maintenance/create" class="btn btn-primary">+ Report Issue</a>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/maintenance/export',
+    'importUrl' => '/maintenance/import',
+]); ?>
+
 <form method="GET" action="/maintenance" class="filter-bar">
     <label>Status
         <select name="status" onchange="this.form.submit()">

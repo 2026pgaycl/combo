@@ -3,6 +3,11 @@
     <a href="/units/create" class="btn btn-primary">+ Add Unit</a>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/units/export',
+    'importUrl' => '/units/import',
+]); ?>
+
 <form method="GET" action="/units" class="filter-bar">
     <label>Filter by building
         <select name="building_id" onchange="this.form.submit()">

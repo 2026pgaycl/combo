@@ -3,6 +3,11 @@
     <a href="/invoices/create" class="btn btn-primary">+ Create Invoice</a>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/invoices/export',
+    'importUrl' => '/invoices/import',
+]); ?>
+
 <table class="data-table">
     <thead>
         <tr><th>Invoice #</th><th>Tenant</th><th>Unit</th><th>Due</th><th>Total</th><th>Paid</th><th>Status</th></tr>

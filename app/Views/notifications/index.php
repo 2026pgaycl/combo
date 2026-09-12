@@ -3,6 +3,11 @@
     <a href="/notifications/create" class="btn btn-primary">+ Queue Notification</a>
 </div>
 
+<?php \App\Core\View::partial('partials.csv_toolbar', [
+    'exportUrl' => '/notifications/export',
+    'importUrl' => '/notifications/import',
+]); ?>
+
 <form method="GET" action="/notifications" class="filter-bar">
     <label>Status
         <select name="status" onchange="this.form.submit()">
