@@ -1,6 +1,6 @@
 <h1>Report Maintenance Issue</h1>
 
-<form method="POST" action="/maintenance" class="form-card">
+<form method="POST" action="/maintenance" enctype="multipart/form-data" class="form-card">
     <?= \App\Core\Csrf::field() ?>
 
     <label>Unit
@@ -25,6 +25,10 @@
 
     <label>Description
         <textarea name="description" rows="4" required></textarea>
+    </label>
+
+    <label>Photo (optional)
+        <input type="file" name="photo" accept="image/*">
     </label>
 
     <div class="form-actions">
