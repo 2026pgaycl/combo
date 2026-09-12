@@ -280,6 +280,55 @@ input, select, textarea {
 .btn-danger { background: var(--danger); color: white; }
 .btn-block { width: 100%; }
 
+/* ---------- Help page ---------- */
+.help-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin: 16px 0 32px;
+    padding: 16px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+.help-section {
+    margin-bottom: 48px;
+    padding-top: 8px;
+}
+.help-section h2 {
+    margin-top: 0;
+}
+.help-screenshot {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+    margin: 16px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.help-screenshot-bar {
+    background: var(--off-white);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--grey);
+    font-family: "Consolas", monospace;
+}
+.help-screenshot-body {
+    padding: 20px;
+}
+.help-screenshot-body h1 { font-size: 20px; margin-bottom: 12px; }
+.help-screenshot-body .page-header { margin-bottom: 12px; }
+.help-screenshot-body .data-table { font-size: 13px; }
+.help-note {
+    background: #eef0f6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--grey);
+    margin-top: 8px;
+}
+
 /* ---------- Photo gallery ---------- */
 .photo-grid {
     display: grid;

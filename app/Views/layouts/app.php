@@ -27,6 +27,7 @@ unset($_SESSION['_flash']);
             <a href="/maintenance">Maintenance</a>
             <a href="/documents">Documents</a>
             <a href="/notifications">Notifications</a>
+            <a href="/help">Help</a>
         </nav>
         <?php if ($user): ?>
         <div class="sidebar-user">
