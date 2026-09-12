@@ -30,7 +30,7 @@ class Invoice extends Model
     public static function findWithDetails(int $id): ?array
     {
         return Database::selectOne(
-            'SELECT i.*, t.company_name, u.unit_number, b.name AS building_name
+            'SELECT i.*, t.company_name, t.contact_name, t.contact_email, u.unit_number, b.name AS building_name
              FROM invoices i
              JOIN leases l ON l.id = i.lease_id
              JOIN tenants t ON t.id = l.tenant_id
