@@ -6,6 +6,7 @@ use App\Controllers\AuthController;
 use App\Controllers\BuildingController;
 use App\Controllers\DashboardController;
 use App\Controllers\DocumentController;
+use App\Controllers\HelpController;
 use App\Controllers\InvoiceController;
 use App\Controllers\LeaseController;
 use App\Controllers\MaintenanceController;
@@ -26,6 +27,7 @@ $router->post('/logout', [AuthController::class, 'logout']);
 $router->group(['auth'], function (Router $r) {
     $r->get('/', [DashboardController::class, 'index']);
     $r->get('/dashboard', [DashboardController::class, 'index']);
+    $r->get('/help', [HelpController::class, 'index']);
 
     $r->get('/buildings', [BuildingController::class, 'index']);
     $r->get('/buildings/create', [BuildingController::class, 'create']);
