@@ -1,0 +1,10 @@
+# Local environment config — copy .env.example instead
+.env
+
+# User-uploaded files — keep the directories' .htaccess hardening, not their contents
+public/uploads/*
+!public/uploads/.htaccess
+
+# OS/editor junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,9 @@
+# Uploaded files are user-supplied — never let this directory execute code,
+# regardless of what extension slipped past the app-level whitelist.
+<FilesMatch "\.(php|phtml|php[0-9]|pl|py|cgi|asp|aspx|sh|exe)$">
+    Require all denied
+</FilesMatch>
+
+php_flag engine off
+
+Options -Indexes -ExecCGI

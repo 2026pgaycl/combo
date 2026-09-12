@@ -1,0 +1,4 @@
+# Point this domain's document root at the public/ folder — that's the
+# front controller's home. This file just makes sure nothing here is served
+# directly if a document root ever gets pointed at the project root by mistake.
+Require all denied
