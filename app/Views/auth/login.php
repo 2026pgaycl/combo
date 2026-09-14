@@ -10,24 +10,34 @@ unset($_SESSION['_flash']);
 <title>Log in — Office Building Rental Management System</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
-<body class="auth-body">
-<div class="auth-card">
-    <div class="auth-brand">Office Building Rental Management System</div>
+<body>
+<div class="guest-wrapper">
+    <div class="guest-card">
+        <div class="guest-logo">
+            <?= \App\Core\View::icon('building', 'guest-mark') ?>
+            <h1>Office Building Rental Management System</h1>
+        </div>
 
-    <?php if ($error): ?>
-        <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="alert alert-error"><?= \App\Core\View::icon('alert-circle') ?> <?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
 
-    <form method="POST" action="/login">
-        <?= \App\Core\Csrf::field() ?>
-        <label>Email
-            <input type="email" name="email" required autofocus>
-        </label>
-        <label>Password
-            <input type="password" name="password" required>
-        </label>
-        <button type="submit" class="btn btn-primary btn-block">Log in</button>
-    </form>
+        <form method="POST" action="/login">
+            <?= \App\Core\Csrf::field() ?>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email</label>
+                <input class="form-control" type="email" id="email" name="email" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Log in</button>
+        </form>
+    </div>
 </div>
 </body>
 </html>
