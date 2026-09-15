@@ -19,22 +19,22 @@ unset($_SESSION['_flash']);
         <div class="sidebar-brand">Office Building Rental Management System</div>
         <nav class="sidebar-nav">
             <?php if (($user['role_slug'] ?? null) === 'tenant'): ?>
-            <a href="/portal">Dashboard</a>
-            <a href="/portal/invoices">Invoices</a>
-            <a href="/portal/maintenance">Maintenance</a>
-            <a href="/portal/documents">Documents</a>
-            <a href="/portal/profile">My Profile</a>
+            <a href="/portal"><?= \App\Core\View::icon('layout-dashboard') ?> Dashboard</a>
+            <a href="/portal/invoices"><?= \App\Core\View::icon('receipt') ?> Invoices</a>
+            <a href="/portal/maintenance"><?= \App\Core\View::icon('wrench') ?> Maintenance</a>
+            <a href="/portal/documents"><?= \App\Core\View::icon('file-text') ?> Documents</a>
+            <a href="/portal/profile"><?= \App\Core\View::icon('user') ?> My Profile</a>
             <?php else: ?>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/buildings">Buildings</a>
-            <a href="/units">Units</a>
-            <a href="/tenants">Tenants</a>
-            <a href="/leases">Leases</a>
-            <a href="/invoices">Invoices</a>
-            <a href="/maintenance">Maintenance</a>
-            <a href="/documents">Documents</a>
-            <a href="/notifications">Notifications</a>
-            <a href="/help">Help</a>
+            <a href="/dashboard"><?= \App\Core\View::icon('layout-dashboard') ?> Dashboard</a>
+            <a href="/buildings"><?= \App\Core\View::icon('building') ?> Buildings</a>
+            <a href="/units"><?= \App\Core\View::icon('package') ?> Units</a>
+            <a href="/tenants"><?= \App\Core\View::icon('users') ?> Tenants</a>
+            <a href="/leases"><?= \App\Core\View::icon('file-text') ?> Leases</a>
+            <a href="/invoices"><?= \App\Core\View::icon('receipt') ?> Invoices</a>
+            <a href="/maintenance"><?= \App\Core\View::icon('wrench') ?> Maintenance</a>
+            <a href="/documents"><?= \App\Core\View::icon('file-text') ?> Documents</a>
+            <a href="/notifications"><?= \App\Core\View::icon('bell') ?> Notifications</a>
+            <a href="/help"><?= \App\Core\View::icon('help-circle') ?> Help</a>
             <?php endif; ?>
         </nav>
         <?php if ($user): ?>
@@ -43,7 +43,7 @@ unset($_SESSION['_flash']);
             <div class="sidebar-user-role"><?= htmlspecialchars($user['role_name']) ?></div>
             <form method="POST" action="/logout">
                 <?= \App\Core\Csrf::field() ?>
-                <button type="submit" class="link-button">Log out</button>
+                <button type="submit" class="link-button"><?= \App\Core\View::icon('log-out') ?> Log out</button>
             </form>
         </div>
         <?php endif; ?>
