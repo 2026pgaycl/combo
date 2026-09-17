@@ -256,8 +256,8 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
   padding: 48px;
   color: #FFFFFF;
   background:
-    linear-gradient(180deg, rgba(38, 46, 34, 0.15) 0%, rgba(38, 46, 34, 0.55) 65%, rgba(38, 46, 34, 0.85) 100%),
-    url('/assets/images/login-bg.png') center / cover no-repeat;
+    linear-gradient(180deg, rgba(38, 46, 34, 0.1) 0%, rgba(38, 46, 34, 0.5) 60%, rgba(38, 46, 34, 0.88) 100%),
+    url('/assets/images/app-bg.jpg') right center / cover no-repeat;
 }
 .guest-visual-brand { display: flex; align-items: center; gap: 9px; margin-bottom: auto; font-family: var(--font-head); font-weight: 600; font-size: 15px; }
 .guest-visual-brand svg { width: 20px; height: 20px; color: var(--accent-soft); flex-shrink: 0; }
@@ -360,7 +360,7 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
 .sidebar-toggle-open { color: var(--ink); }
 
 @media (max-width: 768px) {
-  .app-shell { flex-direction: column; }
+  .app-shell { flex-direction: column; padding: 12px; gap: 12px; }
   .content { padding: 16px; }
   .form-row { grid-template-columns: 1fr; }
 
@@ -389,6 +389,8 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
     max-width: 82vw;
     z-index: 50;
     overflow-y: auto;
+    border-radius: 0;
+    box-shadow: none;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
   }
@@ -427,16 +429,28 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
   --text: var(--ink);
 }
 
-/* ---------- Sidebar stays a dark photo panel (deliberate exception) ----------
-   kit.css's own .sidebar is a light surface; this app keeps its login-page
-   photo behind a tinted overlay instead, so it needs its own background,
-   border and light-on-dark text colors here, redeclared after the base
-   kit rules above so they win. */
-.sidebar {
+/* ---------- App-wide background photo ----------
+   The whole app shell sits on one shared photo (fixed, so it doesn't scroll
+   with the page) instead of a flat paper color. Everything that needs to
+   stay readable — the sidebar nav and the main working area — gets its own
+   opaque or tinted surface on top of it; nothing else touches the photo
+   directly, so no page loses legibility. */
+body {
   background:
-    linear-gradient(rgba(38, 46, 34, 0.82), rgba(38, 46, 34, 0.82)),
-    url('/assets/images/login-bg.png') center / cover no-repeat;
+    linear-gradient(165deg, rgba(38, 46, 34, 0.68), rgba(38, 46, 34, 0.5)),
+    url('/assets/images/app-bg.jpg') center / cover fixed no-repeat;
+}
+.app-shell { padding: 20px; gap: 20px; box-sizing: border-box; }
+
+/* ---------- Sidebar: a frosted panel over the shared photo (deliberate
+   exception to kit.css's light sidebar) ---------- */
+.sidebar {
+  background: rgba(38, 46, 34, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-right: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
 }
 .sidebar-brand { color: #FFFFFF; }
 .sidebar-brand svg { color: var(--accent-soft); }
@@ -471,11 +485,17 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
 .link-button svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* This app has no .topbar / .content wrapper — .main-content sits directly
-   next to .sidebar inside .app-shell. */
+   next to .sidebar inside .app-shell. It's an opaque card floating over the
+   shared photo background so every bare table/heading inside it (this app's
+   views have no per-table card wrapper) stays fully legible. */
 .main-content {
   flex: 1;
   padding: 24px;
   max-width: 1100px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
 }
 
 /* ---------- Bare form elements ----------
