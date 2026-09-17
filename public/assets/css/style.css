@@ -237,32 +237,58 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
 .stat-card.stat-alert { border-left-color: var(--danger); }
 .stat-card.stat-warn { border-left-color: var(--warn); }
 
-/* ---------- Guest layout (login / signup) ---------- */
+/* ---------- Guest layout (login / signup) ----------
+   Split screen: the office photo the app is branded around gets a real home
+   on the left, instead of sitting unused while the form floats in an empty
+   paper-colored void. Collapses to form-only below 860px. */
 .guest-wrapper {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  background: var(--bg);
+}
+.guest-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 48px;
+  color: #FFFFFF;
+  background:
+    linear-gradient(180deg, rgba(38, 46, 34, 0.15) 0%, rgba(38, 46, 34, 0.55) 65%, rgba(38, 46, 34, 0.85) 100%),
+    url('/assets/images/login-bg.png') center / cover no-repeat;
+}
+.guest-visual-brand { display: flex; align-items: center; gap: 9px; margin-bottom: auto; font-family: var(--font-head); font-weight: 600; font-size: 15px; }
+.guest-visual-brand svg { width: 20px; height: 20px; color: var(--accent-soft); flex-shrink: 0; }
+.guest-visual h2 { color: #FFFFFF; font-size: 26px; max-width: 15ch; }
+.guest-visual p { margin: 0; color: var(--accent-soft); font-size: 14px; max-width: 36ch; line-height: 1.6; }
+
+.guest-form-panel {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
   padding: 24px;
 }
 .guest-card {
   width: 100%;
-  max-width: 400px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  padding: 32px;
+  max-width: 380px;
+  padding: 8px;
 }
-.guest-logo { text-align: center; margin-bottom: 22px; }
+.guest-logo { margin-bottom: 26px; }
 .guest-logo .guest-mark { font-size: 30px; line-height: 1; margin-bottom: 4px; }
-.guest-logo h1 { font-size: 20px; margin: 0; }
-.guest-logo p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.guest-logo h1 { font-size: 22px; margin: 0; }
+.guest-logo p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
 .guest-logo img { max-width: 260px; width: 100%; height: auto; }
-.guest-logo svg.guest-mark { width: 32px; height: 32px; color: var(--accent); margin-bottom: 8px; }
+.guest-logo svg.guest-mark { width: 30px; height: 30px; color: var(--accent); margin-bottom: 10px; }
 .guest-subtitle { margin: 10px 0 0; color: var(--muted); font-weight: 700; font-size: 13.5px; letter-spacing: 0.02em; }
 .guest-footnote { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .guest-wrapper { grid-template-columns: 1fr; }
+  .guest-visual { display: none; }
+  .guest-form-panel { padding: 24px 20px; }
+}
 
 /* ---------- App shell (authenticated layout) ---------- */
 .app-shell { display: flex; min-height: 100vh; }
@@ -328,15 +354,31 @@ table.data-table .row-actions { display: inline-flex; gap: 6px; }
 .topbar-user strong { color: var(--ink); }
 .content { padding: 24px; }
 
-.sidebar-toggle { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+.sidebar-toggle { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
 .sidebar-toggle svg { width: 22px; height: 22px; color: var(--ink); }
 .sidebar-overlay { display: none; }
+.sidebar-toggle-open { color: var(--ink); }
 
 @media (max-width: 768px) {
   .app-shell { flex-direction: column; }
   .content { padding: 16px; }
   .form-row { grid-template-columns: 1fr; }
-  .sidebar-toggle { display: block; }
+
+  .sidebar-toggle-open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+  }
+  .sidebar-brand { justify-content: space-between; }
+  .sidebar-brand .sidebar-toggle { display: block; color: #FFFFFF; }
+  .sidebar-brand .sidebar-toggle svg { color: #FFFFFF; }
 
   .sidebar {
     position: fixed;
@@ -469,6 +511,8 @@ select { cursor: pointer; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
   margin-bottom: 20px;
 }
 .header-actions { display: flex; align-items: center; gap: 12px; }
@@ -507,15 +551,45 @@ select { cursor: pointer; }
 .csv-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
   margin-bottom: 16px;
 }
 .csv-import-form {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  padding: 5px 6px 5px 16px;
 }
-.csv-import-form input[type="file"] { font-size: 13px; }
+.csv-import-form input[type="file"] {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--muted);
+  border: none;
+  padding: 0;
+  max-width: 140px;
+}
+.csv-import-form input[type="file"]::file-selector-button {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.csv-import-form input[type="file"]::file-selector-button:hover { background: var(--accent-soft); }
+.csv-import-form .btn { flex-shrink: 0; }
+
+@media (max-width: 560px) {
+  .csv-import-form input[type="file"] { max-width: 96px; }
+}
 
 .danger-zone {
   margin-top: 24px;
@@ -540,8 +614,10 @@ select { cursor: pointer; }
   cursor: pointer;
 }
 
-/* ---------- Legacy status badges (record status, not kit's generic ones) ---------- */
-.badge-vacant, .badge-pending, .badge-unpaid, .badge-queued { background: var(--bg); color: var(--muted); }
+/* ---------- Legacy status badges (record status, not kit's generic ones) ----------
+   Neutral states get a visible border so they still read as a pill on a white
+   card, where --bg (the page background) would otherwise blend in invisibly. */
+.badge-vacant, .badge-pending, .badge-unpaid, .badge-queued { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 .badge-occupied, .badge-active, .badge-paid, .badge-resolved, .badge-sent { background: var(--success-soft); color: var(--success); }
 .badge-reserved, .badge-partially_paid, .badge-in_progress { background: var(--warn-soft); color: var(--warn); }
 .badge-maintenance, .badge-overdue, .badge-open, .badge-failed { background: var(--danger-soft); color: var(--danger); }
@@ -595,6 +671,7 @@ table.data-table tr.row-warning td { background: var(--warn-soft); }
 }
 .help-screenshot-body {
   padding: 20px;
+  overflow-x: auto;
 }
 .help-screenshot-body h1 { font-size: 20px; margin-bottom: 12px; }
 .help-screenshot-body .page-header { margin-bottom: 12px; }
